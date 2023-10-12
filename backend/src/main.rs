@@ -6,7 +6,7 @@ use image::{Luma, png::PngEncoder, ColorType};
 #[tokio::main]
 async fn main() {
     let app = Router::new().route("/", get(index)).route("/qr", get(get_qr_code));
-    axum::Server::bind(&"127.0.0.1:8000".parse().unwrap())
+    axum::Server::bind(&"0.0.0.0:8000".parse().unwrap())
     .serve(app.into_make_service())
     .await
     .unwrap();

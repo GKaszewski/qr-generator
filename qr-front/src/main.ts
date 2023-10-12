@@ -1,6 +1,6 @@
 import './style.css'
 
-const API_ENDPOINT = `https://${window.location.host}/qr?link=`
+const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT as string || 'dupa http://localhost:8000/qr?link='
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
