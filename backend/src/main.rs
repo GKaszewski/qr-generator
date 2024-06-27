@@ -3,19 +3,28 @@ use std::collections::HashMap;
 use axum::{
     debug_handler,
     extract::Query,
-    http::{header::CONTENT_TYPE, StatusCode},
+    http::{header::CONTENT_TYPE, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::get,
     Router,
 };
 use image::{png::PngEncoder, ColorType, Luma};
 use maud::{html, Markup};
+use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() {
     let app = Router::new()
         .route("/", get(index))
-        .route("/qr", get(get_qr_code));
+        .route("/qr", get(get_qr_code))
+        .layer(
+            CorsLayer::new()
+                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+                .allow_origin("http://localhost".parse::<HeaderValue>().unwrap())
+                .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
+                .allow_origin("http://localhost:1337".parse::<HeaderValue>().unwrap())
+                .allow_methods([Method::GET]),
+        );
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
 
