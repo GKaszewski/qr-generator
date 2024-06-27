@@ -1,6 +1,6 @@
 # QR Code generator
 
-Simple qr code generator written in Rust (backend) and vanilla typescript for simple frontend
+Simple qr code generator written in Rust
 
 # Build
 
