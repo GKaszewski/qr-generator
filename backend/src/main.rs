@@ -1,32 +1,69 @@
 use std::collections::HashMap;
 
-use axum::{Router, routing::get, extract::Query, response::IntoResponse, http::{header::CONTENT_TYPE, StatusCode}};
-use image::{Luma, png::PngEncoder, ColorType};
+use axum::{
+    debug_handler,
+    extract::Query,
+    http::{header::CONTENT_TYPE, StatusCode},
+    response::IntoResponse,
+    routing::get,
+    Router,
+};
+use image::{png::PngEncoder, ColorType, Luma};
+use maud::{html, Markup};
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new().route("/", get(index)).route("/qr", get(get_qr_code));
-    axum::Server::bind(&"127.0.0.1:8000".parse().unwrap())
-    .serve(app.into_make_service())
-    .await
-    .unwrap();
+    let app = Router::new()
+        .route("/", get(index))
+        .route("/qr", get(get_qr_code));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+
+    axum::serve(listener, app).await.unwrap();
 }
 
-async fn index() -> &'static str {
-    "Hello, world!"
+#[debug_handler]
+async fn index() -> Markup {
+    html! {
+        html {
+            head {
+                title { "QR Code Generator" }
+            }
+            body {
+                h1 { "QR Code Generator" }
+                form action="/qr" method="get" {
+                    label for="link" { "Value: " }
+                    input type="text" name="link" id="link" required;
+                    input type="submit" value="Generate QR Code";
+                }
+            }
+        }
+    }
 }
 
 async fn get_qr_code(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     let link = match params.get("link") {
         Some(l) => l,
         None => {
-            return (StatusCode::BAD_REQUEST, [(CONTENT_TYPE, "text/plain")], "Missing link").into_response();
+            return (
+                StatusCode::BAD_REQUEST,
+                [(CONTENT_TYPE, "text/plain")],
+                "Missing link",
+            )
+                .into_response();
         }
     };
 
     let qr_code = match qrcode::QrCode::new(link) {
         Ok(qr) => qr,
-        Err(_) => return (StatusCode::BAD_REQUEST, [(CONTENT_TYPE, "text/plain")], "Invalid link").into_response(),
+        Err(_) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                [(CONTENT_TYPE, "text/plain")],
+                "Invalid link",
+            )
+                .into_response()
+        }
     };
 
     let qr_image = qr_code.render::<Luma<u8>>().build();
@@ -36,7 +73,14 @@ async fn get_qr_code(Query(params): Query<HashMap<String, String>>) -> impl Into
     let encoder = PngEncoder::new(&mut buffer);
     match encoder.encode(&qr_image.into_raw(), width, height, ColorType::L8) {
         Ok(_) => (),
-        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, [(CONTENT_TYPE, "text/plain")], "Failed to encode QR code").into_response(),
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                [(CONTENT_TYPE, "text/plain")],
+                "Failed to encode QR code",
+            )
+                .into_response()
+        }
     }
     (StatusCode::OK, [(CONTENT_TYPE, "image/png")], buffer).into_response()
 }
