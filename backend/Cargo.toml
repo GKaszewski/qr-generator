@@ -1,0 +1,11 @@
+[package]
+name = "qr-generator"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+axum = "0.6.20"
+tokio = { version = "1.33.0", features = ["macros", "rt-multi-thread"] }
+qrcode = "0.12.0"
+image = "0.23.14"

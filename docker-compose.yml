@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+    backend:
+        build: ./backend
+        ports:
+            - "3000:3000"
+    frontend:
+        build: ./qr-front
+        ports:
+            - "8080:8080"
+    nginx:
+        image: nginx:latest
+        ports:
+            - "80:80"
+        volumes:
+            - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+            - ./frontend/dist:/usr/share/nginx/html
