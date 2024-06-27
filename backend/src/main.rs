@@ -3,14 +3,14 @@ use std::collections::HashMap;
 use axum::{
     debug_handler,
     extract::Query,
-    http::{header::CONTENT_TYPE, HeaderValue, Method, StatusCode},
+    http::{header::CONTENT_TYPE, Method, StatusCode},
     response::IntoResponse,
     routing::get,
     Router,
 };
 use image::{png::PngEncoder, ColorType, Luma};
 use maud::{html, Markup};
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() {
@@ -19,10 +19,7 @@ async fn main() {
         .route("/qr", get(get_qr_code))
         .layer(
             CorsLayer::new()
-                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
-                .allow_origin("http://localhost".parse::<HeaderValue>().unwrap())
-                .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
-                .allow_origin("http://localhost:1337".parse::<HeaderValue>().unwrap())
+                .allow_origin(Any)
                 .allow_methods([Method::GET]),
         );
 
